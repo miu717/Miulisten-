@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Miu ♫</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #121212; color: white; }
+    header { background: linear-gradient(to right, #ff00cc, #333399); padding: 10px; text-align: center; font-size: 24px; font-weight: bold; position: sticky; top: 0; }
+    nav { display: flex; justify-content: space-around; background: #1e1e1e; padding: 10px 0; }
+    nav button { background: none; border: none; color: white; font-size: 16px; cursor: pointer; }
+    .section { display: none; padding: 20px; }
+    .section.active { display: block; }
+    .card { background: #222; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+    .lock-btn, .pay-btn, .like-btn { background: #ff4081; color: white; border: none; padding: 8px 10px; border-radius: 5px; cursor: pointer; }
+    .login-box { text-align: center; margin: 20px 0; }
+    #qrModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; }
+    #qrModalContent { background: #333; padding: 20px; border-radius: 10px; text-align: center; }
+    #qrModal img { width: 200px; margin: 10px 0; }
+    input, textarea { width: 100%; margin-top: 10px; padding: 10px; border-radius: 5px; border: none; }
+  </style>
+</head>
+<body>
+  <header>Miu <i class="fas fa-music"></i></header>
+  <nav>
+    <button onclick="showSection('songs')">Songs</button>
+    <button onclick="showSection('stories')">Stories</button>
+    <button onclick="showSection('ringtones')">Ringtones</button>
+    <button onclick="showSection('spin')">Ἳ2 Spin</button>
+  </nav>
+
+  <div class="login-box">
+    <button onclick="loginWithGoogle()" class="lock-btn">Login with Google</button>
+  </div>
+
+  <div id="songs" class="section active">
+    <div class="card">
+      <h3>Example Audio</h3>
+      <p>Artist Name</p>
+      <audio id="audio1" controls onplay="handlePlay(1)">
+        <source src="example.mp3" type="audio/mpeg">
+      </audio>
+      <button class="pay-btn" onclick="showQRModal()">Listen Again - Pay ₹5</button>
+      <button class="like-btn" onclick="likeSong(this)">Like ❤</button>
+      <div class="comments">
+        <textarea placeholder="Add a comment"></textarea>
+        <button onclick="addComment(this)">Comment</button>
+        <ul class="comment-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="stories" class="section">Stories section coming soon...</div>
+  <div id="ringtones" class="section">Ringtones section coming soon...</div>
+  <div id="spin" class="section">Spin rewards coming soon...</div>
+
+  <div id="qrModal">
+    <div id="qrModalContent">
+      <h2>🔑 Premium Audio</h2>
+      <p>Listen free once. To listen again, please pay ₹5</p>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?data=upi://pay?pa=7489008748@ibl&pn=Miu&am=5" alt="QR Code">
+      <p>Scan to pay<br>UPI: <b>7489008748@ibl</b></p>
+      <button onclick="closeQRModal()">Close</button>
+      <button onclick="markPaid()">✅ I Have Paid</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBOIuh81q2Vq1p73FjAeD4Smnt1y1RN7w4",
+      authDomain: "miulisten.firebaseapp.com",
+      databaseURL: "https://miulisten-default-rtdb.firebaseio.com",
+      projectId: "miulisten",
+      storageBucket: "miulisten.firebasestorage.app",
+      messagingSenderId: "546317241103",
+      appId: "1:546317241103:web:7f74161f032edd64f5cc7a",
+      measurementId: "G-NFKR2TPJKP"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+
+    window.loginWithGoogle = async function () {
+      const provider = new GoogleAuthProvider();
+      try {
+        const result = await signInWithPopup(auth, provider);
+        alert("Welcome " + result.user.displayName);
+      } catch (error) {
+        alert("Login failed: " + error.message);
+      }
+    };
+  </script>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll(".section").forEach(el => el.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function showQRModal() {
+      document.getElementById("qrModal").style.display = "flex";
+    }
+    function closeQRModal() {
+      document.getElementById("qrModal").style.display = "none";
+    }
+    function markPaid() {
+      alert("Thank you for paying! Audio unlocked.");
+    }
+    function likeSong(btn) {
+      btn.innerHTML = "Liked ❤";
+    }
+    function addComment(button) {
+      const textarea = button.previousElementSibling;
+      const text = textarea.value.trim();
+      if (text !== '') {
+        const ul = button.nextElementSibling;
+        const li = document.createElement("li");
+        li.textContent = text;
+        ul.appendChild(li);
+        textarea.value = "";
+      }
+    }
+  </script>
+</body>
+</html>
