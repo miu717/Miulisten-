@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MiuListen | Login + Audio Preview</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Lobster&family=Montserrat&family=Poppins&family=Raleway&family=Ubuntu&family=Inconsolata&family=Playfair+Display&family=Quicksand&family=Merriweather&family=Oswald&family=Nunito&family=Fira+Sans&family=Work+Sans&family=Rubik&family=Source+Code+Pro&family=Zilla+Slab&family=Bebas+Neue&family=PT+Sans&family=Varela+Round&display=swap">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(to bottom right, #0f0f0f, #1a1a1a);
+      color: #fff;
+      font-family: 'Roboto', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 50px 20px;
+      min-height: 100vh;
+      transition: font-family 0.3s ease;
+    }
+    h1 {
+      color: #00ffd5;
+      margin-bottom: 20px;
+      font-size: 2em;
+    }
+    input, button, select {
+      padding: 12px;
+      margin: 8px;
+      width: 90%;
+      max-width: 300px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+    input {
+      background: #222;
+      color: #fff;
+    }
+    button {
+      background: #00ffd5;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #00bba3;
+    }
+    #logout {
+      margin-top: 20px;
+      background: #ff4f4f;
+      color: white;
+    }
+    audio {
+      margin-top: 30px;
+      width: 90%;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="title">🎧 MiuListen</h1>
+
+  <select id="fontSelect" onchange="changeFont()">
+    <option value="Roboto">Roboto</option>
+    <option value="Open Sans">Open Sans</option>
+    <option value="Lobster">Lobster</option>
+    <option value="Montserrat">Montserrat</option>
+    <option value="Poppins">Poppins</option>
+    <option value="Raleway">Raleway</option>
+    <option value="Ubuntu">Ubuntu</option>
+    <option value="Inconsolata">Inconsolata</option>
+    <option value="Playfair Display">Playfair Display</option>
+    <option value="Quicksand">Quicksand</option>
+    <option value="Merriweather">Merriweather</option>
+    <option value="Oswald">Oswald</option>
+    <option value="Nunito">Nunito</option>
+    <option value="Fira Sans">Fira Sans</option>
+    <option value="Work Sans">Work Sans</option>
+    <option value="Rubik">Rubik</option>
+    <option value="Source Code Pro">Source Code Pro</option>
+    <option value="Zilla Slab">Zilla Slab</option>
+    <option value="Bebas Neue">Bebas Neue</option>
+    <option value="PT Sans">PT Sans</option>
+    <option value="Varela Round">Varela Round</option>
+  </select>
+
+  <select id="languageSelect" onchange="changeLanguage()">
+    <option value="en">🌐 English</option>
+    <option value="hi">🇮🇳 Hindi</option>
+    <option value="es">🇪🇸 Spanish</option>
+    <option value="fr">🇫🇷 French</option>
+    <option value="de">🇩🇪 German</option>
+    <option value="zh">🇨🇳 Chinese</option>
+    <option value="ja">🇯🇵 Japanese</option>
+    <option value="ru">🇷🇺 Russian</option>
+    <option value="ar">🇸🇦 Arabic</option>
+    <option value="bn">🇧🇩 Bengali</option>
+    <option value="ta">🇮🇳 Tamil</option>
+    <option value="te">🇮🇳 Telugu</option>
+    <option value="mr">🇮🇳 Marathi</option>
+    <option value="gu">🇮🇳 Gujarati</option>
+    <option value="pa">🇮🇳 Punjabi</option>
+    <option value="ko">🇰🇷 Korean</option>
+    <option value="tr">🇹🇷 Turkish</option>
+    <option value="it">🇮🇹 Italian</option>
+    <option value="id">🇮🇩 Indonesian</option>
+  </select>
+
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">🔐 Login</button>
+  <button onclick="signup()">🆕 Signup</button>
+  <button id="logout" onclick="logout()">🚪 Logout</button>
+
+  <audio id="audio" controls>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3" />
+    Your browser does not support the audio element.
+  </audio>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBOIuh81q2Vq1p73FjAeD4Smnt1y1RN7w4",
+      authDomain: "miulisten.firebaseapp.com",
+      databaseURL: "https://miulisten-default-rtdb.firebaseio.com",
+      projectId: "miulisten",
+      storageBucket: "miulisten.appspot.com",
+      messagingSenderId: "546317241103",
+      appId: "1:546317241103:web:7f74161f032edd64f5cc7a",
+      measurementId: "G-NFKR2TPJKP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.login = function () {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          alert("Login successful 🎉");
+          window.location.href = "dashboard.html";
+        })
+        .catch((error) => {
+          alert("Login failed ❌: " + error.message);
+        });
+    };
+
+    window.signup = function () {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          alert("Signup successful 🎉");
+          window.location.href = "dashboard.html";
+        })
+        .catch((error) => {
+          alert("Signup failed ❌: " + error.message);
+        });
+    };
+
+    window.logout = function () {
+      signOut(auth).then(() => {
+        alert("Logged out 🚪");
+      });
+    };
+
+    const audio = document.getElementById('audio');
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        audio.addEventListener('timeupdate', () => {
+          if (audio.currentTime > 30) {
+            audio.pause();
+            alert("Please login to listen full audio.");
+          }
+        });
+      }
+    });
+
+    window.changeFont = function () {
+      const selectedFont = document.getElementById('fontSelect').value;
+      document.body.style.fontFamily = `'${selectedFont}', sans-serif`;
+      localStorage.setItem('selectedFont', selectedFont);
+    };
+
+    window.changeLanguage = function () {
+      const lang = document.getElementById('languageSelect').value;
+      alert("Language preference saved: " + lang);
+      localStorage.setItem('selectedLang', lang);
+    };
+
+    window.onload = function () {
+      const savedFont = localStorage.getItem('selectedFont');
+      if (savedFont) {
+        document.body.style.fontFamily = `'${savedFont}', sans-serif`;
+        document.getElementById('fontSelect').value = savedFont;
+      }
+      const savedLang = localStorage.getItem('selectedLang');
+      if (savedLang) {
+        document.getElementById('languageSelect').value = savedLang;
+      }
+    };
+  </script>
+</body>
+</html>
