@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Chat | MiuListen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    #chatBox {
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 15px;
+      background-color: #f4f4f4;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 5px;
+      background-color: white;
+      border-radius: 8px;
+    }
+
+    .message strong {
+      color: #673ab7;
+    }
+  </style>
+</head>
+<body class="miu-theme">
+
+  <header class="header">
+    <h2>💬 Group Chat</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <section style="padding: 16px;">
+    <div id="chatBox"></div>
+
+    <input type="text" id="chatInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+  </section>
+
+  <!-- Firebase Scripts -->
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module">
+    import { auth, rtdb } from './firebase-config.js';
+    import { ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    const chatRef = ref(rtdb, "groupchat");
+
+    function loadChat() {
+      onValue(chatRef, (snapshot) => {
+        const messages = snapshot.val();
+        const box = document.getElementById("chatBox");
+        box.innerHTML = "";
+
+        if (messages) {
+          Object.values(messages).forEach((msg) => {
+            const div = document.createElement("div");
+            div.className = "message";
+            div.innerHTML = `<strong>${msg.user}</strong>: ${msg.text}`;
+            box.appendChild(div);
+          });
+          box.scrollTop = box.scrollHeight;
+        }
+      });
+    }
+
+    window.sendMessage = async () => {
+      const user = auth.currentUser;
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text || !user) return;
+
+      const msgRef = push(chatRef);
+      await set(msgRef, {
+        user: user.displayName || user.email || "Anonymous",
+        text: text,
+        time: Date.now()
+      });
+      input.value = "";
+    };
+
+    window.logout = () => {
+      import('./auth.js').then(m => m.logout());
+    };
+
+    loadChat();
+  </script>
+
+</body>
+</html>
+
