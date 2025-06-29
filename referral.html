@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💌 Refer & Earn | MiuListen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .card {
+      margin: 16px;
+      background: #f7f7f7;
+      padding: 16px;
+      border-radius: 8px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body class="miu-theme">
+
+  <header class="header">
+    <h2>💌 Invite & Earn</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <section class="card">
+    <p>🎁 Share your link and earn <b>+20 Coins</b> per friend who signs up!</p>
+    <input type="text" id="refLink" readonly />
+    <button onclick="copyLink()">📋 Copy Link</button>
+  </section>
+
+  <div class="card">
+    <h4>✅ Total Referrals: <span id="refCount">0</span></h4>
+    <p>Coin rewards are credited automatically!</p>
+  </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import {
+      doc, getDoc, updateDoc, collection, query, where, getDocs
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const refLink = document.getElementById("refLink");
+    const refCount = document.getElementById("refCount");
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        alert("Login required");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const uid = user.uid;
+      refLink.value = `${window.location.origin}/signup.html?ref=${uid}`;
+
+      // Count referrals
+      const q = query(collection(db, "users"), where("referredBy", "==", uid));
+      const snap = await getDocs(q);
+      refCount.innerText = snap.size;
+    });
+
+    window.copyLink = () => {
+      refLink.select();
+      document.execCommand("copy");
+      alert("📋 Link copied!");
+    };
+
+    window.logout = () => {
+      import('./auth.js').then(m => m.logout());
+    };
+  </script>
+
+</body>
+</html>
+
