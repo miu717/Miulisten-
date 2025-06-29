@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rewards | MiuListen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .spin-wheel {
+      width: 220px;
+      height: 220px;
+      border: 10px solid #673ab7;
+      border-radius: 50%;
+      margin: 30px auto;
+      position: relative;
+      transition: transform 3s ease-out;
+    }
+
+    .pointer {
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 30px solid red;
+      position: absolute;
+      top: -30px;
+      left: 90px;
+    }
+
+    #rewardResult {
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body class="miu-theme">
+
+  <header class="header">
+    <h2>🎰 Spin & Win</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <section style="padding: 16px;">
+    <div class="pointer"></div>
+    <div class="spin-wheel" id="wheel"></div>
+
+    <center>
+      <button onclick="spinNow()">🔄 Spin Now</button>
+      <p id="rewardResult">You get 1 free spin per day!</p>
+    </center>
+  </section>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module">
+    const rewards = [
+      "🎧 Free Song",
+      "🔓 Unlock Paid Audio",
+      "💰 ₹5 Wallet",
+      "🌀 Spin Again",
+      "🥺 Better Luck Next Time",
+      "🎁 Secret Gift"
+    ];
+
+    function canSpinFreeToday() {
+      const lastSpin = localStorage.getItem("lastSpinTime");
+      if (!lastSpin) return true;
+      const now = Date.now();
+      return (now - parseInt(lastSpin)) > 86400000; // 24 hrs in ms
+    }
+
+    function spinNow() {
+      if (!canSpinFreeToday()) {
+        const pay = confirm("🚫 You've already spun today.\n💸 Want to pay ₹1 to spin again?");
+        if (!pay) return;
+        // ⚠️ Later: Razorpay payment logic ya coins cut yahan lagega
+      }
+
+      const wheel = document.getElementById("wheel");
+      const index = Math.floor(Math.random() * rewards.length);
+      const degree = 360 * 3 + index * (360 / rewards.length);
+      wheel.style.transform = `rotate(${degree}deg)`;
+
+      setTimeout(() => {
+        document.getElementById("rewardResult").innerText = "🎉 " + rewards[index];
+        localStorage.setItem("lastSpinTime", Date.now());
+        // ⚠️ Future: reward ke hisab se unlock, ₹5 add, etc.
+      }, 3100);
+    }
+
+    window.logout = () => {
+      import('./auth.js').then(m => m.logout());
+    };
+  </script>
+
+</body>
+</html>
+
