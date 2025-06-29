@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Playlists | MiuListen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .playlist-card {
+      background: #f9f9f9;
+      margin: 12px 0;
+      padding: 10px;
+      border-left: 4px solid #673ab7;
+      border-radius: 6px;
+    }
+    .playlist-card h4 {
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="miu-theme">
+
+  <header class="header">
+    <h2>🎧 My Playlists</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <section style="padding: 16px;">
+    <input type="text" id="playlistName" placeholder="Playlist Name..." />
+    <select id="playlistType">
+      <option value="public">🌍 Public</option>
+      <option value="private">🔒 Private</option>
+    </select>
+    <button onclick="createPlaylist()">➕ Create Playlist</button>
+
+    <hr />
+
+    <div id="playlistContainer">Loading your playlists...</div>
+  </section>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import {
+      collection, addDoc, getDocs, query, where
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const container = document.getElementById("playlistContainer");
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const q = query(collection(db, "playlists"), where("owner", "==", user.uid));
+      const snap = await getDocs(q);
+
+      container.innerHTML = "";
+      snap.forEach(doc => {
+        const p = doc.data();
+        const div = document.createElement("div");
+        div.className = "playlist-card";
+        div.innerHTML = `
+          <h4>${p.name} (${p.type})</h4>
+          <button onclick="openPlaylist('${doc.id}')">🎵 View Playlist</button>
+        `;
+        container.appendChild(div);
+      });
+    });
+
+    window.createPlaylist = async () => {
+      const name = document.getElementById("playlistName").value;
+      const type = document.getElementById("playlistType").value;
+      const user = auth.currentUser;
+
+      if (!name || !user) return alert("Name missing");
+
+      await addDoc(collection(db, "playlists"), {
+        name,
+        type,
+        owner: user.uid,
+        created: Date.now()
+      });
+
+      alert("✅ Playlist Created");
+      window.location.reload();
+    };
+
+    window.openPlaylist = (id) => {
+      window.location.href = `playlist-view.html?pid=${id}`;
+    };
+
+    window.logout = () => {
+      import('./auth.js').then(m => m.logout());
+    };
+  </script>
+
+</body>
+</html>
+
