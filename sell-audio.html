@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎙️ Sell Audio | MiuListen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .form-box {
+      background: #f3f3f3;
+      padding: 16px;
+      margin: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="miu-theme">
+  <header class="header">
+    <h2>🎙️ Sell Audio to Another Creator</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <section class="form-box">
+    <p>🔁 Sell your uploaded audio to another creator:</p>
+    <input type="text" id="audioId" placeholder="Audio ID to sell"><br><br>
+    <input type="number" id="price" placeholder="₹ Price (e.g. 100)"><br><br>
+    <input type="text" id="buyerUid" placeholder="Buyer Creator UID"><br><br>
+    <button onclick="sellAudio()">📩 Send Sale Request</button>
+    <p id="msg" style="color: green;"></p>
+  </section>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import {
+      addDoc, collection
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const audioIdInput = document.getElementById("audioId");
+    const priceInput = document.getElementById("price");
+    const buyerUidInput = document.getElementById("buyerUid");
+    const msg = document.getElementById("msg");
+
+    let currentUser = null;
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        alert("Login required");
+        window.location.href = "login.html";
+      } else {
+        currentUser = user;
+      }
+    });
+
+    window.sellAudio = async () => {
+      const audioId = audioIdInput.value.trim();
+      const price = parseInt(priceInput.value.trim());
+      const buyer = buyerUidInput.value.trim();
+
+      if (!audioId || !price || !buyer) {
+        alert("⚠️ All fields required");
+        return;
+      }
+
+      await addDoc(collection(db, "transfer_requests"), {
+        audioId,
+        price,
+        buyerUID: buyer,
+        sellerUID: currentUser.uid,
+        status: "pending",
+        time: new Date().toLocaleString()
+      });
+
+      msg.innerText = "✅ Sale request sent to buyer!";
+    };
+
+    window.logout = () => {
+      import('./auth.js').then(m => m.logout());
+    };
+  </script>
+</body>
+</html>
