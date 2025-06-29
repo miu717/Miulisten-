@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MiuListen - Login/Signup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 20px;
+    }
+    h1 {
+      color: #00ffcc;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      width: 90%;
+      max-width: 300px;
+    }
+    button {
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #logout {
+      margin-top: 20px;
+      background: red;
+      color: white;
+    }
+    audio {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎵 MiuListen</h1>
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">🔐 Login</button>
+  <button onclick="signup()">🆕 Signup</button>
+  <button id="logout" onclick="logout()">🚪 Logout</button>
+
+  <audio id="audio" controls>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    Your browser does not support the audio tag.
+  </audio>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBOIuh81q2Vq1p73FjAeD4Smnt1y1RN7w4",
+      authDomain: "miulisten.firebaseapp.com",
+      databaseURL: "https://miulisten-default-rtdb.firebaseio.com",
+      projectId: "miulisten",
+      storageBucket: "miulisten.appspot.com",
+      messagingSenderId: "546317241103",
+      appId: "1:546317241103:web:7f74161f032edd64f5cc7a",
+      measurementId: "G-NFKR2TPJKP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Login Function
+    window.login = function () {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          alert("Login successful 🎉");
+        })
+        .catch((error) => {
+          alert("Login failed ❌: " + error.message);
+        });
+    };
+
+    // Signup Function
+    window.signup = function () {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          alert("Signup successful 🎉");
+        })
+        .catch((error) => {
+          alert("Signup failed ❌: " + error.message);
+        });
+    };
+
+    // Logout Function
+    window.logout = function () {
+      signOut(auth).then(() => {
+        alert("Logged out 🚪");
+      });
+    };
+
+    // Restrict audio access if not logged in
+    const audio = document.getElementById('audio');
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Preview only 30 sec
+        audio.addEventListener('timeupdate', () => {
+          if (audio.currentTime > 30) {
+            audio.pause();
+            alert("Please login to listen full audio.");
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
