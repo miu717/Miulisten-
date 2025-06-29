@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>👑 Admin Panel | MiuListen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .panel {
+      padding: 16px;
+      margin: 16px;
+      border-left: 5px solid #ff5722;
+      border-radius: 8px;
+      background: #fefefe;
+    }
+    .panel button {
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body class="miu-theme">
+
+  <header class="header">
+    <h2>👑 Admin Dashboard</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <section id="adminPanel" style="display: none;">
+    <div class="panel">
+      <h3>📥 Withdraw Requests</h3>
+      <div id="withdrawList">Loading...</div>
+    </div>
+
+    <div class="panel">
+      <h3>🛡️ User/Creator Control</h3>
+      <input type="text" id="uidInput" placeholder="Enter UID" />
+      <button onclick="verifyUser()">✔️ Verify</button>
+      <button onclick="banUser()">🚫 Ban</button>
+    </div>
+
+    <div class="panel">
+      <h3>🚨 Push Notification</h3>
+      <input type="text" id="noticeInput" placeholder="Enter notice..." />
+      <button onclick="sendNotice()">📢 Send</button>
+    </div>
+  </section>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import {
+      collection, doc, getDocs, updateDoc, deleteDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const withdrawList = document.getElementById("withdrawList");
+    const adminPanel = document.getElementById("adminPanel");
+    const ADMIN_UID = "DRkNHsoCrEQnfZsJ7CL2OJunRh82";
+
+    auth.onAuthStateChanged(async user => {
+      if (!user || user.uid !== ADMIN_UID) {
+        alert("Unauthorized access");
+        window.location.href = "index.html";
+        return;
+      }
+
+      adminPanel.style.display = "block";
+      loadWithdraws();
+    });
+
+    async function loadWithdraws() {
+      const snap = await getDocs(collection(db, "withdraws"));
+      withdrawList.innerHTML = "";
+
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <b>${data.user}</b> - ₹${data.amount} <br/>
+          <small>${data.note}</small> <br/>
+          <button onclick="approveWithdraw('${docSnap.id}')">✅ Approve</button>
+          <button onclick="rejectWithdraw('${docSnap.id}')">❌ Reject</button>
+          <hr/>
+        `;
+        withdrawList.appendChild(div);
+      });
+    }
+
+    window.approveWithdraw = async (id) => {
+      alert("Withdraw approved (manual UPI karo)");
+      await deleteDoc(doc(db, "withdraws", id));
+      loadWithdraws();
+    };
+
+    window.rejectWithdraw = async (id) => {
+      alert("Withdraw rejected");
+      await deleteDoc(doc(db, "withdraws", id));
+      loadWithdraws();
+    };
+
+    window.verifyUser = async () => {
+      const uid = document.getElementById("uidInput").value.trim();
+      if (!uid) return;
+      await updateDoc(doc(db, "users", uid), { verified: true });
+      alert("✅ User verified");
+    };
+
+    window.banUser = async () => {
+      const uid = document.getElementById("uidInput").value.trim();
+      if (!uid) return;
+      await updateDoc(doc(db, "users", uid), { banned: true });
+      alert("🚫 User banned");
+    };
+
+    window.sendNotice = async () => {
+      const msg = document.getElementById("noticeInput").value.trim();
+      if (!msg) return;
+      await setDoc(doc(db, "notices", "latest"), {
+        message: msg,
+        time: new Date().toLocaleString()
+      });
+      alert("📢 Notice sent!");
+    };
+
+    window.logout = () => {
+      import('./auth.js').then(m => m.logout());
+    };
+  </script>
+
+</body>
+</html>
+
