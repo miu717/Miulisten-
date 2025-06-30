@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="MiuListen - India's smartest audio platform with music, stories, rewards, AI, and global features." />
+  <title>MiuListen UltraMax</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
+    :root {
+      --main-bg: #0f172a;
+      --accent: #22c55e;
+      --text: #f1f5f9;
+      --font: 'Segoe UI', sans-serif;
+    }
+    * {margin:0;padding:0;box-sizing:border-box;font-family:var(--font);}
+    body {background:var(--main-bg);color:var(--text);overflow-x:hidden;}
+    header, footer {background:#1e293b;padding:1rem;text-align:center;}
+    h1 {font-size:2rem;color:var(--accent);}
+    .container {padding:1rem;max-width:900px;margin:auto;}
+    .btn {background:var(--accent);padding:0.5rem 1rem;border:none;border-radius:0.5rem;color:#000;cursor:pointer;}
+    input, select, textarea {width:100%;margin:0.5rem 0;padding:0.6rem;border-radius:0.3rem;border:1px solid #ccc;}
+    .audio-card {background:#1e293b;padding:1rem;border-radius:1rem;margin:1rem 0;box-shadow:0 2px 10px #0004;}
+    .flex {display:flex;gap:1rem;align-items:center;}
+    .space-between {justify-content:space-between;}
+    .hidden {display:none;}
+    .lang-font-switch {display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MiuListen 🎧 UltraMax</h1>
+    <p>Welcome to India's smartest audio universe</p>
+  </header>
+
+  <main class="container">
+    <!-- Auth Section -->
+    <section id="auth-section">
+      <h2>Login / Signup</h2>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button class="btn" onclick="loginUser()">Login</button>
+      <button class="btn" onclick="signupUser()">Signup</button>
+    </section>
+
+    <!-- User Dashboard Placeholder -->
+    <section id="user-dashboard" class="hidden">
+      <h2>Welcome, <span id="username">User</span> 🎧</h2>
+      <button class="btn" onclick="logoutUser()">Logout</button>
+      <p>UID: <code id="user-uid"></code></p>
+
+      <div class="lang-font-switch">
+        <select id="font-picker" onchange="changeFont(this.value)">
+          <option>Segoe UI</option>
+          <option>Roboto</option>
+          <option>Poppins</option>
+          <option>Open Sans</option>
+          <option>Lobster</option>
+          <option>Oswald</option>
+          <option>Nunito</option>
+          <option>Courier New</option>
+          <option>Inter</option>
+          <option>Raleway</option>
+          <option>Ubuntu</option>
+          <option>Merriweather</option>
+          <option>Dancing Script</option>
+          <option>Baloo Bhaina</option>
+          <option>Arimo</option>
+          <option>Kanit</option>
+          <option>Playfair Display</option>
+          <option>Heebo</option>
+          <option>Source Sans Pro</option>
+          <option>Orbitron</option>
+        </select>
+
+        <select id="lang-picker" onchange="changeLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="bn">Bengali</option>
+          <option value="gu">Gujarati</option>
+          <option value="ta">Tamil</option>
+          <option value="te">Telugu</option>
+          <option value="kn">Kannada</option>
+          <option value="ml">Malayalam</option>
+          <option value="mr">Marathi</option>
+          <option value="pa">Punjabi</option>
+          <option value="ur">Urdu</option>
+          <option value="zh">Chinese</option>
+          <option value="ru">Russian</option>
+          <option value="ar">Arabic</option>
+          <option value="de">German</option>
+          <option value="ja">Japanese</option>
+          <option value="ko">Korean</option>
+          <option value="it">Italian</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Firebase + Razorpay Config will come in next part -->
+<script type="module">
+  // Firebase SDK v9+ Modular
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+  import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBOIuh81q2Vq1p73FjAeD4Smnt1y1RN7w4",
+    authDomain: "miulisten.firebaseapp.com",
+    databaseURL: "https://miulisten-default-rtdb.firebaseio.com",
+    projectId: "miulisten",
+    storageBucket: "miulisten.appspot.com",
+    messagingSenderId: "546317241103",
+    appId: "1:546317241103:web:7f74161f032edd64f5cc7a",
+    measurementId: "G-NFKR2TPJKP"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const db = getDatabase();
+  const storage = getStorage();
+
+  // User Functions
+  function loginUser() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCred) => console.log("Login Success", userCred))
+      .catch(err => alert("Login Failed: " + err.message));
+  }
+
+  function signupUser() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCred) => console.log("Signup Success", userCred))
+      .catch(err => alert("Signup Failed: " + err.message));
+  }
+
+  function logoutUser() {
+    signOut(auth).then(() => location.reload());
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("auth-section").classList.add("hidden");
+      document.getElementById("user-dashboard").classList.remove("hidden");
+      document.getElementById("username").textContent = user.email.split("@")[0];
+      document.getElementById("user-uid").textContent = user.uid;
+    }
+  });
+
+  // Font & Language
+  function changeFont(font) {
+    document.documentElement.style.setProperty('--font', font);
+  }
+  function changeLanguage(lang) {
+    alert("🌐 Language switched to: " + lang);
+  }
+
+  window.loginUser = loginUser;
+  window.signupUser = signupUser;
+  window.logoutUser = logoutUser;
+  window.changeFont = changeFont;
+  window.changeLanguage = changeLanguage;
+</script>
+
+<!-- Razorpay Payment -->
+<script>
+  function initiatePayment(amount, creatorUID) {
+    var options = {
+      key: "rzp_test_xxxxxxxxxxxx", // ← Replace with your real key
+      amount: amount * 100,
+      currency: "INR",
+      name: "MiuListen",
+      description: "Unlock Premium Audio",
+      handler: function (response) {
+        // 3% goes to Arun, rest to creator
+        const arunShare = amount * 0.03;
+        const creatorShare = amount * 0.97;
+
+        const paymentRef = ref(getDatabase(), `payments/${creatorUID}`);
+        push(paymentRef, {
+          time: Date.now(),
+          amount: creatorShare,
+          platformFee: arunShare,
+          paymentId: response.razorpay_payment_id
+        });
+
+        alert("✅ Payment successful! Premium unlocked.");
+      },
+      theme: { color: "#22c55e" },
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+  }
+</script>
+<section id="upload-section">
+  <h2>🎙️ Upload Your Audio</h2>
+  <input type="text" id="audio-title" placeholder="Title of Audio">
+  <select id="audio-category">
+    <option>Songs</option>
+    <option>Stories</option>
+    <option>Ringtones</option>
+    <option>Motivational</option>
+    <option>Peaceful</option>
+    <option>Funny</option>
+  </select>
+  <input type="number" id="audio-price" placeholder="Set Price (₹0 = Free)">
+  <input type="file" id="audio-file">
+  <button class="btn" onclick="uploadAudio()">Upload Now</button>
+</section>
+
+<section id="audio-feed">
+  <h2>🔥 Explore Latest Audios</h2>
+  <div id="audio-list"></div>
+</section>
+
+<section id="upload-section" class="hidden">
+  <h2>🎙️ Upload Your Audio</h2>
+  <input type="text" id="audio-title" placeholder="Title of Audio">
+  <select id="audio-category">
+    <option>Songs</option>
+    <option>Stories</option>
+    <option>Ringtones</option>
+    <option>Motivational</option>
+    <option>Peaceful</option>
+    <option>Funny</option>
+  </select>
+  <input type="number" id="audio-price" placeholder="Set Price (₹0 = Free)">
+  <input type="file" id="audio-file">
+  <button class="btn" onclick="uploadAudio()">Upload Now</button>
+</section>
+
+<section id="audio-feed">
+  <h2>🔥 Explore Latest Audios</h2>
+  <div id="audio-list"></div>
+</section>
+
+<script>
+  function uploadAudio() {
+    const file = document.getElementById('audio-file').files[0];
+    const title = document.getElementById('audio-title').value;
+    const category = document.getElementById('audio-category').value;
+    const price = parseFloat(document.getElementById('audio-price').value || 0);
+    const user = getAuth().currentUser;
+    if (!file || !title || !user) return alert('📛 Fill all fields');
+
+    const storageRef = sRef(getStorage(), `audios/${user.uid}/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed', null, (err) => {
+      alert('❌ Upload Failed: ' + err.message);
+    }, () => {
+      getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+        const audioData = {
+          title, category, price, url,
+          uid: user.uid,
+          timestamp: Date.now(),
+          likes: 0, views: 0, comments: []
+        };
+        push(ref(getDatabase(), 'audios'), audioData);
+        alert('✅ Upload Successful');
+      });
+    });
+  }
+
+  const audioListDiv = document.getElementById('audio-list');
+  const audioRef = ref(getDatabase(), 'audios');
+  onValue(audioRef, (snapshot) => {
+    audioListDiv.innerHTML = '';
+    snapshot.forEach((child) => {
+      const data = child.val();
+      const isFree = data.price === 0;
+      const unlockBtn = isFree
+        ? ''
+        : `<button class="btn" onclick="initiatePayment(${data.price}, '${data.uid}')">Unlock</button>`;
+      const audioTag = isFree
+        ? `<audio controls src="${data.url}"></audio>`
+        : `<p>🔒 Premium content. Unlock to listen.</p>`;
+
+      audioListDiv.innerHTML += `
+        <div class="audio-card">
+          <h3>${data.title} (${data.category})</h3>
+          ${audioTag}
+          <p>Price: ₹${data.price}</p>
+          ${unlockBtn}
+        </div>
+      `;
+    });
+  });
+</script>
+<!-- 🔥 Part 4: Like, Comment, Spin, Withdraw -->
+
+<section id="engage-section">
+  <h2>❤️ Engage with Audio</h2>
+  <div id="comment-box" class="hidden">
+    <textarea id="user-comment" placeholder="Write your comment..."></textarea>
+    <button onclick="postComment()">💬 Post</button>
+  </div>
+  <div id="comments-list"></div>
+</section>
+
+<section id="spin-wheel-section" class="hidden">
+  <h2>🎡 Daily Spin Wheel</h2>
+  <button onclick="spinReward()">Spin Now</button>
+  <p id="spin-result"></p>
+</section>
+
+<section id="wallet-section" class="hidden">
+  <h2>💰 Creator Wallet</h2>
+  <p id="wallet-balance">Loading...</p>
+  <button onclick="withdrawMoney()">Withdraw ₹</button>
+</section>
+
+<script>
+  let lastSpinDate = localStorage.getItem("lastSpin") || "";
+
+  function postComment() {
+    const comment = document.getElementById("user-comment").value;
+    const user = getAuth().currentUser;
+    if (!comment || !user) return alert("Login to comment");
+    const commentRef = ref(getDatabase(), `comments/${user.uid}`);
+    push(commentRef, { text: comment, time: Date.now() });
+    alert("✅ Comment Posted");
+    document.getElementById("user-comment").value = "";
+  }
+
+  function spinReward() {
+    const today = new Date().toDateString();
+    if (today === lastSpinDate) return alert("🚫 You already spun today!");
+
+    const rewards = ["1 Coin", "5 Coin", "Free Audio", "₹5 Payback", "Try Again"];
+    const result = rewards[Math.floor(Math.random() * rewards.length)];
+    document.getElementById("spin-result").innerText = `🎉 You won: ${result}`;
+    lastSpinDate = today;
+    localStorage.setItem("lastSpin", today);
+  }
+
+  function withdrawMoney() {
+    const user = getAuth().currentUser;
+    if (!user) return alert("Login to withdraw");
+    const balRef = ref(getDatabase(), `wallets/${user.uid}`);
+    get(balRef).then(snapshot => {
+      const balance = snapshot.val() || 0;
+      if (balance < 10) return alert("Minimum ₹10 required to withdraw");
+      alert(`✅ ₹${balance} sent to your UPI`);
+      set(balRef, 0);
+    });
+  }
+
+  function showWallet() {
+    const user = getAuth().currentUser;
+    if (!user) return;
+    const balRef = ref(getDatabase(), `wallets/${user.uid}`);
+    onValue(balRef, (snap) => {
+      document.getElementById("wallet-balance").innerText = `Wallet: ₹${snap.val() || 0}`;
+    });
+  }
+
+  onAuthStateChanged(getAuth(), (user) => {
+    if (user) {
+      document.getElementById("comment-box").classList.remove("hidden");
+      document.getElementById("spin-wheel-section").classList.remove("hidden");
+      document.getElementById("wallet-section").classList.remove("hidden");
+      showWallet();
+    }
+  });
+</script>
+
+<!-- ✅ Part 5: Admin Panel, Alerts, Verification, Ban System -->
+
+<section id="admin-section" class="hidden">
+  <h2>👮 Admin Dashboard</h2>
+  <button onclick="loadReports()">📢 View Reported Content</button>
+  <button onclick="loadCreators()">✅ Verify Creators</button>
+  <div id="admin-output"></div>
+</section>
+
+<script>
+  const ADMIN_UID = "DRkNHsoCrEQnfZsJ7CL2OJunRh82"; // Arun Bhaiya UID
+
+  function loadReports() {
+    const reportRef = ref(getDatabase(), 'reports');
+    onValue(reportRef, (snapshot) => {
+      let out = '<h3>🚨 Reported Content:</h3>';
+      snapshot.forEach((child) => {
+        const r = child.val();
+        out += `<div><b>${r.reason}</b> | <button onclick="removeContent('${r.audioId}')">Remove</button></div>`;
+      });
+      document.getElementById("admin-output").innerHTML = out;
+    });
+  }
+
+  function removeContent(id) {
+    remove(ref(getDatabase(), `audios/${id}`)).then(() => alert('❌ Content Removed'));
+  }
+
+  function loadCreators() {
+    const userRef = ref(getDatabase(), 'users');
+    onValue(userRef, (snap) => {
+      let html = '<h3>🔍 Pending Verification</h3>';
+      snap.forEach((c) => {
+        const u = c.val();
+        if (!u.verified) {
+          html += `<div>${u.name || c.key} <button onclick="verifyUser('${c.key}')">Verify</button></div>`;
+        }
+      });
+      document.getElementById("admin-output").innerHTML = html;
+    });
+  }
+
+  function verifyUser(uid) {
+    set(ref(getDatabase(), `users/${uid}/verified`), true).then(() => alert("✅ Verified"));
+  }
+
+  onAuthStateChanged(getAuth(), (user) => {
+    if (user && user.uid === ADMIN_UID) {
+      document.getElementById("admin-section").classList.remove("hidden");
+    }
+  });
+</script>
+
+<!-- ✅ Final Touch: Download Blocker + Google Ad Ready Placeholder -->
+
+<script>
+  function allowDownload(url, isPaid) {
+    const user = getAuth().currentUser;
+    if (!user && isPaid) return alert("🔒 Login required to download paid content");
+    if (isPaid) {
+      // block download if not unlocked yet
+      alert("❌ Paid content. Unlock first");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = url.split("/").pop();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+</script>
+
+<!-- Add inside audio-card where applicable -->
+<!-- Example usage: -->
+<!--
+  <button onclick="allowDownload('${data.url}', ${data.price > 0})">⬇️ Download</button>
+-->
+
+<!-- 🅿️ Google Ads Placeholder -->
+<section id="ads-section">
+  <h3>🔖 Ad</h3>
+  <div style="border:2px dashed gray; padding:10px; text-align:center;">
+    Google Ad will appear here once approved ✅
+  </div>
+</section>
